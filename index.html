@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz-Ping Palette-lösare</title>
+<style>
+  :root{
+    --ink:#e9e2d0;
+    --ink-dim:#9c9284;
+    --bg:#151210;
+    --bg-panel:#1e1a16;
+    --bg-well:#100d0b;
+    --line:#332b23;
+    --ember:#c4602f;
+    --ember-bright:#e2793e;
+    --moss:#7c8a52;
+    --gold:#c9a35a;
+    --danger:#a33b3b;
+    --radius:3px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(196,96,47,0.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    min-height:100vh;
+    padding:2.5rem 1.25rem 5rem;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{margin-bottom:2.25rem;}
+  .eyebrow{
+    font-family: "Courier New", monospace;
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ember-bright);
+    margin:0 0 0.5rem;
+  }
+  h1{
+    font-size:2rem;
+    line-height:1.15;
+    margin:0 0 0.6rem;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--ink-dim);
+    font-size:0.98rem;
+    line-height:1.55;
+    max-width:52ch;
+    margin:0;
+  }
+
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1.5rem;
+    margin-bottom:1.5rem;
+  }
+  .panel h2{
+    font-size:0.78rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 1rem;
+    font-family: "Courier New", monospace;
+    font-weight:600;
+  }
+
+  .dropzone{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:2rem 1rem;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    background:var(--bg-well);
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--ember);
+    background:rgba(196,96,47,0.06);
+  }
+  .dropzone p{margin:0.25rem 0;color:var(--ink-dim);font-size:0.9rem;}
+  .dropzone strong{color:var(--ink);font-weight:600;}
+  input[type=file]{display:none;}
+
+  #preview-wrap{margin-top:1rem;display:none;}
+  #preview{max-width:100%;border-radius:var(--radius);display:block;border:1px solid var(--line);}
+
+  .swatch-row{display:flex;gap:0.5rem;margin-top:1rem;}
+  .swatch{
+    flex:1;
+    aspect-ratio:1.6;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .swatch input[type=color]{
+    position:absolute;inset:0;width:100%;height:100%;
+    border:none;padding:0;background:none;cursor:pointer;opacity:0;
+  }
+  .swatch .hex{
+    position:absolute;bottom:3px;left:0;right:0;
+    text-align:center;font-family:"Courier New",monospace;
+    font-size:0.62rem;color:rgba(0,0,0,0.55);
+    mix-blend-mode:luminosity;
+    pointer-events:none;
+  }
+
+  .btnrow{display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;}
+  button{
+    font-family:inherit;
+    font-size:0.85rem;
+    letter-spacing:0.03em;
+    padding:0.65rem 1.1rem;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  button.primary{
+    background:var(--ember);
+    border-color:var(--ember);
+    color:#100d0b;
+    font-weight:700;
+  }
+  button.primary:hover{background:var(--ember-bright);border-color:var(--ember-bright);}
+  button:not(.primary):hover{border-color:var(--ink-dim);}
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+
+  #results{margin-top:0.25rem;}
+  .result-row{
+    display:flex;
+    align-items:center;
+    gap:0.9rem;
+    padding:0.75rem 0;
+    border-bottom:1px solid var(--line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .rank{
+    font-family:"Courier New",monospace;
+    font-size:0.85rem;
+    color:var(--ink-dim);
+    width:1.6rem;
+    text-align:right;
+    flex-shrink:0;
+  }
+  .rank.top{color:var(--gold);font-weight:700;}
+  .result-swatches{display:flex;flex-shrink:0;}
+  .result-swatches span{
+    width:16px;height:22px;
+    border:1px solid rgba(0,0,0,0.35);
+    margin-left:-1px;
+  }
+  .result-swatches span:first-child{margin-left:0;border-top-left-radius:2px;border-bottom-left-radius:2px;}
+  .result-swatches span:last-child{border-top-right-radius:2px;border-bottom-right-radius:2px;}
+  .result-name{font-size:1.02rem;flex:1;}
+  .result-score{
+    font-family:"Courier New",monospace;
+    font-size:0.72rem;
+    color:var(--ink-dim);
+  }
+
+  .empty{color:var(--ink-dim);font-size:0.9rem;padding:1.5rem 0;text-align:center;}
+  .db-note{
+    margin-top:2rem;
+    font-size:0.82rem;
+    color:var(--ink-dim);
+    line-height:1.6;
+    border-top:1px solid var(--line);
+    padding-top:1.25rem;
+  }
+  .db-note code{
+    background:var(--bg-well);
+    padding:0.1rem 0.35rem;
+    border-radius:2px;
+    font-size:0.85em;
+  }
+  .count-badge{
+    display:inline-block;
+    font-family:"Courier New",monospace;
+    font-size:0.72rem;
+    color:var(--moss);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:0.15rem 0.6rem;
+    margin-left:0.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">:: palette</p>
+    <h1>Vilken varelse gömmer sig i färgerna?</h1>
+    <p class="sub">Ladda upp Quiz-Pings skärmdump, eller ställ in de 5 rutorna manuellt. Appen rankar Bestiary-varelser efter hur väl deras kända färgpalett matchar.</p>
+  </header>
+
+  <div class="panel">
+    <h2>1 · Skärmdump</h2>
+    <div class="dropzone" id="dropzone">
+      <p><strong>Klicka för att välja bild</strong> eller släpp den här</p>
+      <p>Vi läser av 5 färgrutor automatiskt från bilden</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+    <div id="preview-wrap">
+      <img id="preview" alt="Uppladdad skärmdump">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2 · Avlästa färger <span style="font-weight:400;color:var(--ink-dim);font-size:0.72rem;">(klicka en ruta för att justera)</span></h2>
+    <div class="swatch-row" id="swatchRow"></div>
+    <div class="btnrow">
+      <button class="primary" id="matchBtn" disabled>Gissa varelse</button>
+      <button id="resetBtn">Nollställ</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3 · Troligast <span class="count-badge" id="dbCount"></span></h2>
+    <div id="results"><p class="empty">Ladda upp en skärmdump eller ställ in färgerna ovan.</p></div>
+  </div>
+
+  <p class="db-note">
+    Databasen just nu innehåller bara ett litet startset (byggt från kända Quiz-Ping-facit). Skala upp genom att köra <code>scripts/scrape_creatures.py</code> och sedan <code>scripts/build_palette_db.py</code> på fler sprites, och klistra in det nya innehållet i <code>data/creatures_db.json</code> (eller ersätt <code>CREATURE_DB</code> i denna fil).
+  </p>
+
+</div>
+
+<script>
+// ---- Databas -------------------------------------------------------
+// Byggd med scripts/build_palette_db.py: k-means (k=5) pa unika fargtripplar
+// i spriten, ovagt av pixelfrekvens, ingen svart-filtrering, forsta framen.
+const CREATURE_DB = {"Swampling": [[33, 22, 11], [108, 110, 58], [78, 51, 29], [160, 160, 111], [219, 214, 202]], "Blood Priest": [[39, 20, 18], [160, 10, 10], [85, 64, 52], [194, 172, 148], [141, 109, 80]], "Courage Leech": [[54, 0, 27], [45, 11, 109], [16, 44, 202], [145, 4, 101], [174, 85, 235]], "Bandit": [[39, 32, 28], [124, 82, 41], [137, 135, 103], [228, 191, 139], [226, 213, 1]], "Pig": [[240, 184, 120], [7, 6, 4], [199, 153, 102], [145, 108, 75], [85, 63, 40]], "Fire Devil": [[101, 24, 12], [40, 13, 7], [154, 46, 22], [203, 76, 35], [242, 188, 156]], "Death Priest": [[60, 48, 31], [194, 135, 91], [226, 225, 216], [11, 169, 20], [197, 18, 21]], "Iron Servant Replica": [[53, 31, 24], [85, 79, 78], [143, 114, 81], [146, 142, 142], [223, 211, 190]], "Crypt Warrior": [[39, 31, 23], [227, 222, 214], [92, 84, 73], [150, 143, 134], [132, 59, 10]]};
+
+document.getElementById('dbCount').textContent = Object.keys(CREATURE_DB).length + ' monster';
+
+// ---- State -----------------------------------------------------------
+let currentColors = [null, null, null, null, null];
+
+const swatchRow = document.getElementById('swatchRow');
+const matchBtn = document.getElementById('matchBtn');
+const resultsEl = document.getElementById('results');
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const previewWrap = document.getElementById('preview-wrap');
+const preview = document.getElementById('preview');
+
+function rgbToHex([r,g,b]){
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function hexToRgb(hex){
+  const v = parseInt(hex.slice(1), 16);
+  return [(v>>16)&255, (v>>8)&255, v&255];
+}
+
+function renderSwatches(){
+  swatchRow.innerHTML = '';
+  for(let i=0;i<5;i++){
+    const div = document.createElement('div');
+    div.className = 'swatch';
+    const color = currentColors[i] || [40,36,32];
+    div.style.background = rgbToHex(color);
+    const inp = document.createElement('input');
+    inp.type = 'color';
+    inp.value = rgbToHex(color);
+    inp.addEventListener('input', e => {
+      currentColors[i] = hexToRgb(e.target.value);
+      renderSwatches();
+      updateMatchButton();
+    });
+    div.appendChild(inp);
+    const hex = document.createElement('div');
+    hex.className = 'hex';
+    hex.textContent = currentColors[i] ? rgbToHex(color).toUpperCase() : '?';
+    div.appendChild(hex);
+    swatchRow.appendChild(div);
+  }
+}
+renderSwatches();
+
+function updateMatchButton(){
+  matchBtn.disabled = currentColors.some(c => c === null);
+}
+
+// ---- Bilduppladdning & fargavlasning ---------------------------------
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if(e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    preview.src = url;
+    previewWrap.style.display = 'block';
+    extractPaletteColors(img);
+  };
+  img.src = url;
+}
+
+// Antar 5 lika breda vertikala falt (som Quiz-Pings palette-bild).
+// Tar medianfargen i ett centrerat omrade av varje falt for att undvika
+// kompressionsartefakter och kanteffekter.
+function extractPaletteColors(img){
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const w = canvas.width, h = canvas.height;
+  const stripW = w / 5;
+  const colors = [];
+
+  for(let i=0;i<5;i++){
+    const cx0 = Math.floor(i*stripW + stripW*0.3);
+    const cx1 = Math.floor(i*stripW + stripW*0.7);
+    const cy0 = Math.floor(h*0.3);
+    const cy1 = Math.floor(h*0.7);
+    const sampW = Math.max(1, cx1-cx0);
+    const sampH = Math.max(1, cy1-cy0);
+    const data = ctx.getImageData(cx0, cy0, sampW, sampH).data;
+
+    const rs=[], gs=[], bs=[];
+    for(let p=0; p<data.length; p+=4){
+      rs.push(data[p]); gs.push(data[p+1]); bs.push(data[p+2]);
+    }
+    colors.push([median(rs), median(gs), median(bs)]);
+  }
+  currentColors = colors;
+  renderSwatches();
+  updateMatchButton();
+}
+
+function median(arr){
+  const s = [...arr].sort((a,b)=>a-b);
+  return s[Math.floor(s.length/2)];
+}
+
+// ---- Matchning ---------------------------------------------------------
+// Optimal (icke-positionsberoende) matchning: provar alla 5! permutationer
+// av tilldelning mellan inputfargerna och en varelses 5 fargcentroider,
+// och tar den permutation som minimerar total kvadratisk fargdistans.
+// (Positionsordning visade sig INTE vara tillforlitlig mot Quiz-Ping-facit.)
+function permutations(arr){
+  if(arr.length <= 1) return [arr];
+  const result = [];
+  for(let i=0;i<arr.length;i++){
+    const rest = arr.slice(0,i).concat(arr.slice(i+1));
+    for(const p of permutations(rest)){
+      result.push([arr[i], ...p]);
+    }
+  }
+  return result;
+}
+const PERMS5 = permutations([0,1,2,3,4]);
+
+function dist2(a,b){
+  return (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
+}
+
+function scoreAgainst(input, dbColors){
+  let best = Infinity;
+  for(const perm of PERMS5){
+    let sum = 0;
+    for(let i=0;i<5;i++) sum += dist2(input[i], dbColors[perm[i]]);
+    if(sum < best) best = sum;
+  }
+  return best;
+}
+
+function runMatch(){
+  const scored = Object.entries(CREATURE_DB).map(([name, colors]) => ({
+    name,
+    colors,
+    score: scoreAgainst(currentColors, colors)
+  }));
+  scored.sort((a,b) => a.score - b.score);
+  renderResults(scored.slice(0, 10));
+}
+
+function renderResults(list){
+  resultsEl.innerHTML = '';
+  list.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'result-row';
+
+    const rank = document.createElement('div');
+    rank.className = 'rank' + (idx === 0 ? ' top' : '');
+    rank.textContent = idx+1;
+    row.appendChild(rank);
+
+    const sw = document.createElement('div');
+    sw.className = 'result-swatches';
+    item.colors.forEach(c => {
+      const s = document.createElement('span');
+      s.style.background = rgbToHex(c);
+      sw.appendChild(s);
+    });
+    row.appendChild(sw);
+
+    const name = document.createElement('div');
+    name.className = 'result-name';
+    name.textContent = item.name;
+    row.appendChild(name);
+
+    const score = document.createElement('div');
+    score.className = 'result-score';
+    score.textContent = 'avst. ' + Math.round(Math.sqrt(item.score / 5));
+    row.appendChild(score);
+
+    resultsEl.appendChild(row);
+  });
+}
+
+matchBtn.addEventListener('click', runMatch);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  currentColors = [null,null,null,null,null];
+  previewWrap.style.display = 'none';
+  fileInput.value = '';
+  renderSwatches();
+  updateMatchButton();
+  resultsEl.innerHTML = '<p class="empty">Ladda upp en skärmdump eller ställ in färgerna ovan.</p>';
+});
+</script>
+</body>
+</html>
