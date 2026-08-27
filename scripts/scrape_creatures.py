@@ -16,6 +16,7 @@ Anpassa gladeligen till samma requests/parsing-monster du redan har i
 itemleta-skraparen om den har battre felhantering/retries.
 """
 import argparse
+import html
 import json
 import re
 import time
@@ -45,6 +46,8 @@ def get_creature_names(limit=None, delay=1.0):
             title = m["title"]
             if title.startswith("Category:"):
                 continue
+            if title.lower() in ("free account bestiary",):
+                continue
             names.append(title)
             if limit and len(names) >= limit:
                 return names
@@ -66,14 +69,14 @@ def get_infobox_image_url(page_title, delay=1.0):
     r = requests.get(API, params=params, headers=HEADERS, timeout=30)
     r.raise_for_status()
     data = r.json()
-    html = data.get("parse", {}).get("text", {}).get("*", "")
+    page_html = data.get("parse", {}).get("text", {}).get("*", "")
     # forsta bilden i infoboxen
-    m = re.search(r'class="[^"]*pi-image-thumbnail[^"]*"[^>]*src="([^"]+)"', html)
+    m = re.search(r'class="[^"]*pi-image-thumbnail[^"]*"[^>]*src="([^"]+)"', page_html)
     if not m:
-        m = re.search(r'class="[^"]*image[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"', html)
+        m = re.search(r'class="[^"]*image[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"', page_html)
     if not m:
         return None
-    url = m.group(1)
+    url = html.unescape(m.group(1))  # &amp; -> & osv, annars 404 pa riktiga anrop
     # ta bort ev. thumbnail-nedskalning i URL:en for att fa originalbilden
     url = re.sub(r"/scale-to-width-down/\d+", "", url)
     return url
